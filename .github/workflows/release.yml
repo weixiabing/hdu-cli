@@ -24,7 +24,7 @@ jobs:
           GOOS=darwin GOARCH=arm64 go build -o gopeed-macos-arm64 github.com/GopeedLab/gopeed/cmd/gopeed
 
       - name: 上传构建产物
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gopeed-macos-arm64
           path: gopeed-macos-arm64
