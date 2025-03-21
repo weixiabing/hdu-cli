@@ -1,52 +1,30 @@
-name: 发版
+name: 上传构建产物
+
 on:
   push:
     tags:
       - 'v*'
-#  workflow_dispatch:
-#    inputs:
-#      build:
-#        description: '发版，请输入true'
-#        required: true
-#        default: 'true'
-#      version_description:
-#        description: '输入版本描述'
-#        required: true
-#        default: '升级内容：性能优化 | bug修复'
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: 编译并发布版本
-    runs-on: ubuntu-latest
+  build-macos-arm64:
+    name: 构建并上传 macOS ARM64 二进制文件
+    runs-on: macos-latest
     steps:
       - name: 准备代码
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: 获取git标签
-        run: git fetch --force --tags
-
-      - name: 准备编译环境
-        uses: actions/setup-go@v3
+      - name: 设置 Go 环境
+        uses: actions/setup-go@v4
         with:
           go-version: '1.17'
 
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: 构建二进制文件
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -o gopeed-macos-arm64 github.com/GopeedLab/gopeed/cmd/gopeed
 
-      - name: 运行GoReleaser发版
-        uses: goreleaser/goreleaser-action@v2
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v3
         with:
-          version: latest
-          args: release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
-          FURY_USER_NAME: at0m
+          name: gopeed-macos-arm64
+          path: gopeed-macos-arm64
