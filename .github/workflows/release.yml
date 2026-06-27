@@ -27,7 +27,7 @@ jobs:
           install-only: true
 
       - name: Build Linux CLI snapshot
-        run: goreleaser build --snapshot --clean
+        run: goreleaser release --snapshot --clean
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
