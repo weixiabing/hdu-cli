@@ -56,12 +56,18 @@ jobs:
           cache: npm
           cache-dependency-path: desktop/wails/frontend/package-lock.json
 
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+
+      - name: Add Wails CLI to PATH
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
       - name: Install frontend dependencies
         run: npm install
         working-directory: desktop/wails/frontend
 
       - name: Build Wails app bundle
-        run: go run github.com/wailsapp/wails/v3/cmd/wails3@latest task darwin:package
+        run: wails3 task darwin:package
 
       - name: Create DMG
         run: |
@@ -95,6 +101,14 @@ jobs:
           cache: npm
           cache-dependency-path: desktop/wails/frontend/package-lock.json
 
+      - name: Install Wails CLI
+        shell: pwsh
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+
+      - name: Add Wails CLI to PATH
+        shell: pwsh
+        run: Add-Content -Path $env:GITHUB_PATH -Value "$(go env GOPATH)\bin"
+
       - name: Install frontend dependencies
         run: npm install
         working-directory: desktop/wails/frontend
@@ -104,7 +118,7 @@ jobs:
 
       - name: Build Wails executable
         shell: pwsh
-        run: go run github.com/wailsapp/wails/v3/cmd/wails3@latest task windows:build:native
+        run: wails3 task windows:build:native
 
       - name: Build MSI
         shell: pwsh
