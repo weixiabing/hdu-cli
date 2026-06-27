@@ -67,7 +67,10 @@ jobs:
         working-directory: desktop/wails/frontend
 
       - name: Build Wails app bundle
-        run: wails3 task darwin:package
+        run: |
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          wails3 version
+          wails3 task darwin:package
 
       - name: Create DMG
         run: |
@@ -118,7 +121,10 @@ jobs:
 
       - name: Build Wails executable
         shell: pwsh
-        run: wails3 task windows:build:native
+        run: |
+          $env:PATH="$(go env GOPATH)\bin;$env:PATH"
+          wails3 version
+          wails3 task windows:build:native
 
       - name: Build MSI
         shell: pwsh
