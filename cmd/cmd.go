@@ -51,6 +51,9 @@ var cfgFile string
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	defaults := appconfig.Default()
+	viper.RegisterAlias("endpoint", "net.endpoint")
+	viper.RegisterAlias("acid", "net.acid")
+	viper.RegisterAlias("username", "net.auth.username")
 	viper.SetDefault("endpoint", defaults.Endpoint)
 	viper.SetDefault("acid", defaults.ACID)
 	viper.SetDefault("username", defaults.Username)
@@ -58,6 +61,9 @@ func initConfig() {
 	viper.SetDefault("autoConnect", defaults.AutoConnect)
 	viper.SetDefault("autoReconnect", defaults.AutoReconnect)
 	viper.SetDefault("logLevel", defaults.LogLevel)
+	viper.SetDefault("net.endpoint", defaults.Endpoint)
+	viper.SetDefault("net.acid", defaults.ACID)
+	viper.SetDefault("net.auth.username", defaults.Username)
 
 	if cfgFile != "" {
 		// Use config file from the flag.
