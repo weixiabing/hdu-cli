@@ -42,9 +42,9 @@ func (m *ReconnectManager) ReconnectOnce(ctx context.Context, creds Credentials)
 
 	for {
 		if err := ctx.Err(); err != nil {
-			status := Status{Phase: PhaseFailed, Online: false, Message: err.Error()}
+			status := Status{Phase: PhaseFailed, Online: false, Message: ErrReconnectCanceled.Error()}
 			m.emit(status)
-			return status, err
+			return status, ErrReconnectCanceled
 		}
 
 		status, err := m.session.Login(ctx, creds)
@@ -72,8 +72,14 @@ func (m *ReconnectManager) ReconnectOnce(ctx context.Context, creds Credentials)
 		m.emit(retrying)
 
 		if err := m.sleep(ctx, backoff); err != nil {
-			failed := Status{Phase: PhaseFailed, Online: false, Message: err.Error()}
+			failed := Status{Phase: PhaseFailed, Online: false, Message: ErrReconnectCanceled.Error()}
+			if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+				failed.Message = err.Error()
+			}
 			m.emit(failed)
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				return failed, ErrReconnectCanceled
+			}
 			return failed, err
 		}
 

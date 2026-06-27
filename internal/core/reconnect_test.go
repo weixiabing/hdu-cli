@@ -120,8 +120,8 @@ func TestReconnectManagerStopsOnContextCancellation(t *testing.T) {
 		Username: "20230001",
 		Password: "secret",
 	})
-	if !errors.Is(err, context.Canceled) {
-		t.Fatalf("expected context canceled error, got %v", err)
+	if !errors.Is(err, ErrReconnectCanceled) {
+		t.Fatalf("expected reconnect canceled error, got %v", err)
 	}
 	if attempts != 1 {
 		t.Fatalf("expected one attempt before cancellation, got %d", attempts)
