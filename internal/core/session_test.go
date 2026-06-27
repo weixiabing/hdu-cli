@@ -10,6 +10,8 @@ type fakePortalClient struct {
 	loginCalls         int
 	logoutCalls        int
 	currentStatusCalls int
+	loginStatus        Status
+	loginErr           error
 	logoutErr          error
 	currentStatus      Status
 	currentStatusErr   error
@@ -17,7 +19,10 @@ type fakePortalClient struct {
 
 func (f *fakePortalClient) Login(ctx context.Context, username, password string) (Status, error) {
 	f.loginCalls++
-	return Status{Phase: PhaseConnected, Online: true}, nil
+	if f.loginStatus == (Status{}) && f.loginErr == nil {
+		return Status{Phase: PhaseConnected, Online: true}, nil
+	}
+	return f.loginStatus, f.loginErr
 }
 
 func (f *fakePortalClient) Logout(ctx context.Context, username string) error {
@@ -93,5 +98,39 @@ func TestSessionServiceCurrentStatusReturnsClientError(t *testing.T) {
 	_, err := service.CurrentStatus(context.Background())
 	if err == nil {
 		t.Fatal("expected current status error")
+	}
+}
+
+func TestSessionServiceCurrentStatusReturnsDisconnectedWithoutError(t *testing.T) {
+	client := &fakePortalClient{
+		currentStatus: Status{Phase: PhaseDisconnected, Online: false},
+	}
+	service := NewSessionService(client)
+
+	status, err := service.CurrentStatus(context.Background())
+	if err != nil {
+		t.Fatalf("expected disconnected status without error, got %v", err)
+	}
+	if status.Phase != PhaseDisconnected || status.Online {
+		t.Fatalf("expected disconnected offline status, got %#v", status)
+	}
+}
+
+func TestSessionServiceLoginReturnsAuthenticationFailure(t *testing.T) {
+	client := &fakePortalClient{
+		loginStatus: Status{Phase: PhaseFailed, Online: false, Message: "bad credentials"},
+		loginErr:    ErrAuthenticationFailed,
+	}
+	service := NewSessionService(client)
+
+	status, err := service.Login(context.Background(), Credentials{
+		Username: "20230001",
+		Password: "secret",
+	})
+	if !errors.Is(err, ErrAuthenticationFailed) {
+		t.Fatalf("expected authentication failure, got %v", err)
+	}
+	if status.Phase != PhaseFailed {
+		t.Fatalf("expected failed status, got %#v", status)
 	}
 }

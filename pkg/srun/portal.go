@@ -63,15 +63,6 @@ type PortalServer struct {
 	challenge      *challenge
 	loginResponse  *loginResponse
 	logoutResponse *logoutResponse
-
-	adapterHooks portalAdapterHooks
-}
-
-type portalAdapterHooks struct {
-	getUserInfo  func() (*userInfo, error)
-	getChallenge func() (*challenge, error)
-	portalLogin  func() (*loginResponse, error)
-	portalLogout func() (*logoutResponse, error)
 }
 
 func (s *PortalServer) Login(ctx context.Context, username, password string) (core.Status, error) {
@@ -83,14 +74,14 @@ func (s *PortalServer) Login(ctx context.Context, username, password string) (co
 	if err := s.SetPassword(password); err != nil {
 		return core.Status{Phase: core.PhaseFailed, Online: false, Message: err.Error()}, err
 	}
-	info, err := s.getUserInfo()
+	info, err := s.GetUserInfo()
 	if err != nil {
 		return core.Status{Phase: core.PhaseFailed, Online: false, Message: err.Error()}, err
 	}
-	if _, err := s.getChallenge(); err != nil {
+	if _, err := s.GetChallenge(); err != nil {
 		return core.Status{Phase: core.PhaseFailed, Online: false, Message: err.Error()}, err
 	}
-	resp, err := s.portalLogin()
+	resp, err := s.PortalLogin()
 	if err != nil {
 		return core.Status{Phase: core.PhaseFailed, Online: false, Message: err.Error()}, mapLoginError(err)
 	}
@@ -112,14 +103,14 @@ func (s *PortalServer) Logout(ctx context.Context, username string) error {
 			return err
 		}
 	}
-	info, err := s.getUserInfo()
+	info, err := s.GetUserInfo()
 	if err != nil {
 		return err
 	}
 	if isOfflineUserInfo(info) {
 		return nil
 	}
-	resp, err := s.portalLogout()
+	resp, err := s.PortalLogout()
 	if err != nil {
 		return err
 	}
@@ -131,7 +122,7 @@ func (s *PortalServer) Logout(ctx context.Context, username string) error {
 
 func (s *PortalServer) CurrentStatus(ctx context.Context) (core.Status, error) {
 	_ = ctx
-	info, err := s.getUserInfo()
+	info, err := s.GetUserInfo()
 	if err != nil {
 		return core.Status{Phase: core.PhaseDisconnected, Online: false, Message: err.Error()}, err
 	}
@@ -198,48 +189,4 @@ func mapLoginError(err error) error {
 
 func isOfflineUserInfo(info *userInfo) bool {
 	return info != nil && info.Error == "not_online_error"
-}
-
-func (s *PortalServer) getUserInfo() (*userInfo, error) {
-	if s.adapterHooks.getUserInfo != nil {
-		info, err := s.adapterHooks.getUserInfo()
-		if info != nil {
-			s.userInfo = info
-		}
-		return info, err
-	}
-	return s.GetUserInfo()
-}
-
-func (s *PortalServer) getChallenge() (*challenge, error) {
-	if s.adapterHooks.getChallenge != nil {
-		challenge, err := s.adapterHooks.getChallenge()
-		if challenge != nil {
-			s.challenge = challenge
-		}
-		return challenge, err
-	}
-	return s.GetChallenge()
-}
-
-func (s *PortalServer) portalLogin() (*loginResponse, error) {
-	if s.adapterHooks.portalLogin != nil {
-		resp, err := s.adapterHooks.portalLogin()
-		if resp != nil {
-			s.loginResponse = resp
-		}
-		return resp, err
-	}
-	return s.PortalLogin()
-}
-
-func (s *PortalServer) portalLogout() (*logoutResponse, error) {
-	if s.adapterHooks.portalLogout != nil {
-		resp, err := s.adapterHooks.portalLogout()
-		if resp != nil {
-			s.logoutResponse = resp
-		}
-		return resp, err
-	}
-	return s.PortalLogout()
 }
