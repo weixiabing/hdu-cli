@@ -22,13 +22,13 @@ func Load(path string) (AppConfig, error) {
 		return cfg, err
 	}
 
-	if v.IsSet("net.endpoint") {
+	if !v.IsSet("endpoint") && v.IsSet("net.endpoint") {
 		cfg.Endpoint = v.GetString("net.endpoint")
 	}
-	if v.IsSet("net.acid") {
+	if !v.IsSet("acid") && v.IsSet("net.acid") {
 		cfg.ACID = v.GetString("net.acid")
 	}
-	if v.IsSet("net.auth.username") {
+	if !v.IsSet("username") && v.IsSet("net.auth.username") {
 		cfg.Username = v.GetString("net.auth.username")
 	}
 

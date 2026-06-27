@@ -82,6 +82,37 @@ func TestLoadMapsLegacyNetConfig(t *testing.T) {
 	}
 }
 
+func TestLoadPrefersTopLevelKeysOverLegacyNetConfig(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "conflict.yaml")
+	conflict := "" +
+		"endpoint: https://new.example\n" +
+		"acid: \"9\"\n" +
+		"username: new-user\n" +
+		"net:\n" +
+		"  endpoint: http://legacy.example\n" +
+		"  acid: \"3\"\n" +
+		"  auth:\n" +
+		"    username: legacy-user\n"
+	if err := os.WriteFile(path, []byte(conflict), 0o644); err != nil {
+		t.Fatalf("write conflicting config: %v", err)
+	}
+
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if cfg.Endpoint != "https://new.example" {
+		t.Fatalf("expected top-level endpoint to win, got %q", cfg.Endpoint)
+	}
+	if cfg.ACID != "9" {
+		t.Fatalf("expected top-level acid to win, got %q", cfg.ACID)
+	}
+	if cfg.Username != "new-user" {
+		t.Fatalf("expected top-level username to win, got %q", cfg.Username)
+	}
+}
+
 func TestLoadInvalidYAMLReturnsError(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "invalid.yaml")
 	if err := os.WriteFile(path, []byte("endpoint: [\n"), 0o644); err != nil {
