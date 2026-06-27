@@ -5,12 +5,20 @@ import "./styles.css"
 
 type PageId = "home" | "connect" | "logs" | "me"
 
-const navItems: Array<{ id: PageId; label: string; icon: string }> = [
-  { id: "home", label: "主页", icon: "⌂" },
+const navItems: Array<{ id: Exclude<PageId, "home">; label: string; icon: string }> = [
   { id: "connect", label: "连接", icon: "◫" },
   { id: "logs", label: "日志", icon: "≣" },
   { id: "me", label: "我的", icon: "◉" },
 ]
+
+const pageTitles: Record<PageId, string> = {
+  home: "主页",
+  connect: "连接",
+  logs: "日志",
+  me: "我的",
+}
+
+const projectUrl = "https://github.com/weixiabing/hdu-cli"
 
 const fallbackState: DesktopState = {
   phase: "disconnected",
@@ -61,6 +69,14 @@ function App() {
     }
     return "未连接"
   }, [state.online, state.phase])
+
+  async function handleHomeAction() {
+    if (state.online) {
+      await handleDisconnect()
+      return
+    }
+    await handleSaveAndConnect()
+  }
 
   function syncForm(next: DesktopState) {
     setForm((prev) => ({
@@ -119,13 +135,16 @@ function App() {
   return (
     <main className="app-shell">
       <aside className="sidebar">
-        <div className="brand">
+        <button
+          className={`brand ${activePage === "home" ? "active" : ""}`}
+          onClick={() => setActivePage("home")}
+        >
           <div className="brand-mark">H</div>
           <div>
             <strong>HDU</strong>
             <span>校园网客户端</span>
           </div>
-        </div>
+        </button>
 
         <nav className="nav-list">
           {navItems.map((item) => (
@@ -145,7 +164,7 @@ function App() {
         <header className="content-head">
           <div>
             <p className="eyebrow">应用程序</p>
-            <h1>{navItems.find((item) => item.id === activePage)?.label}</h1>
+            <h1>{pageTitles[activePage]}</h1>
           </div>
           <div className="head-status">
             <span className={`dot ${state.online ? "online" : ""}`} />
@@ -155,13 +174,13 @@ function App() {
 
         {activePage === "home" && (
           <section className="home-view">
-            <div className={`hero-status phase-${state.phase}`}>
+            <button className={`hero-status phase-${state.phase}`} onClick={handleHomeAction}>
               <div className="hero-badge">{state.online ? "⏸" : "▶"}</div>
               <div className="hero-text">
-                <strong>{onlineLabel}</strong>
+                <strong>{state.online ? "点击断开" : "点击连接"}</strong>
                 <span>{state.message || "等待操作"}</span>
               </div>
-            </div>
+            </button>
 
             <div className="hero-actions">
               <button className="primary" disabled={busy} onClick={handleSaveAndConnect}>
@@ -330,6 +349,14 @@ function App() {
                 <div>
                   <span>平台</span>
                   <strong>macOS / Windows</strong>
+                </div>
+                <div>
+                  <span>项目地址</span>
+                  <strong>
+                    <a href={projectUrl} target="_blank" rel="noreferrer">
+                      {projectUrl}
+                    </a>
+                  </strong>
                 </div>
               </div>
             </article>

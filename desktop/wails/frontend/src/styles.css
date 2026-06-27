@@ -54,17 +54,23 @@ button {
 .sidebar {
   background: linear-gradient(180deg, #101827, #121a2a);
   border-right: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 18px 10px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
 .brand {
-  height: 46px;
+  width: 100%;
+  border: 0;
+  padding: 16px 10px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
 }
 
 .brand > div:last-child {
@@ -87,6 +93,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 0 10px 12px;
 }
 
 .nav-item {
@@ -194,6 +201,8 @@ button {
   gap: 14px;
   padding: 24px;
   text-align: center;
+  width: 100%;
+  cursor: pointer;
 }
 
 .hero-badge {
@@ -331,6 +340,16 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
+.about-grid a {
+  color: var(--text);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.about-grid a:hover {
+  color: #c6cbff;
+}
+
 .actions,
 .row-actions {
   margin-top: 0;
@@ -446,6 +465,7 @@ button {
   .nav-list {
     flex-direction: row;
     flex: 1;
+    padding: 0 10px 0 0;
   }
 
   .nav-item {
