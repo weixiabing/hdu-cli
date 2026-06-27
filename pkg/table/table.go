@@ -16,13 +16,21 @@ func PrintStruct(in interface{}, tags ...string) {
 
 	rows := rows(in, tags...)
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader(append([]string{"Name", "Value"}, tags...))
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	headers := append([]string{"Name", "Value"}, tags...)
+	headerRow := make([]any, 0, len(headers))
+	for _, header := range headers {
+		headerRow = append(headerRow, header)
+	}
+	table.Header(headerRow...)
 
 	for _, v := range rows {
-		table.Append(v)
+		row := make([]any, 0, len(v))
+		for _, column := range v {
+			row = append(row, column)
+		}
+		_ = table.Append(row...)
 	}
-	table.Render() // Send output
+	_ = table.Render() // Send output
 }
 
 // rows returns a slice of strings representing the struct fields

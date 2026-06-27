@@ -14,7 +14,6 @@ import (
 	"github.com/hduhelp/hdu-cli/pkg/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var Cmd = &cobra.Command{
@@ -61,7 +60,7 @@ var loginCmd = &cobra.Command{
 
 func tokenVerify(ctx context.Context, token string) {
 	client := authv1.NewAuthServiceClient(grpcclient.Conn(ctx))
-	info, err := client.GetTokenInfo(grpcclient.WithToken(ctx, token), &emptypb.Empty{})
+	info, err := client.GetTokenInfo(grpcclient.WithToken(ctx, token), &authv1.GetTokenInfoRequest{})
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -90,7 +89,7 @@ var infoCmd = &cobra.Command{
 			log.Fatalf("auth token not found")
 		}
 		client := authv1.NewAuthServiceClient(grpcclient.Conn(ctx))
-		info, err := client.GetTokenInfo(grpcclient.WithToken(ctx, token), &emptypb.Empty{})
+		info, err := client.GetTokenInfo(grpcclient.WithToken(ctx, token), &authv1.GetTokenInfoRequest{})
 		if err != nil {
 			fmt.Println(err)
 		} else {
