@@ -1,10 +1,14 @@
 package srun
 
 import (
+	"context"
 	"errors"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/hduhelp/hdu-cli/internal/core"
 )
 
 func New(endpoint, acID string) *PortalServer {
@@ -61,6 +65,72 @@ type PortalServer struct {
 	logoutResponse *logoutResponse
 }
 
+func (s *PortalServer) Login(ctx context.Context, username, password string) (core.Status, error) {
+	_ = ctx
+
+	if err := s.SetUsername(username); err != nil {
+		return core.Status{Phase: core.PhaseFailed, Online: false, Message: err.Error()}, err
+	}
+	if err := s.SetPassword(password); err != nil {
+		return core.Status{Phase: core.PhaseFailed, Online: false, Message: err.Error()}, err
+	}
+	if _, err := s.GetUserInfo(); err != nil {
+		return core.Status{Phase: core.PhaseFailed, Online: false, Message: err.Error()}, err
+	}
+	resp, err := s.PortalLogin()
+	if err != nil {
+		return core.Status{Phase: core.PhaseFailed, Online: false, Message: err.Error()}, mapLoginError(err)
+	}
+	if ok, err := resp.IsOK(); !ok {
+		if err == nil {
+			err = core.ErrAuthenticationFailed
+		}
+		return core.Status{Phase: core.PhaseFailed, Online: false, Message: err.Error()}, mapLoginError(err)
+	}
+
+	return core.Status{Phase: core.PhaseConnected, Online: true}, nil
+}
+
+func (s *PortalServer) Logout(ctx context.Context, username string) error {
+	_ = ctx
+	if username != "" {
+		if err := s.SetUsername(username); err != nil {
+			return err
+		}
+	}
+	if _, err := s.GetUserInfo(); err != nil {
+		return err
+	}
+	resp, err := s.PortalLogout()
+	if err != nil {
+		return err
+	}
+	if ok, err := resp.IsOK(); !ok {
+		return err
+	}
+	return nil
+}
+
+func (s *PortalServer) CurrentStatus(ctx context.Context) (core.Status, error) {
+	_ = ctx
+	info, err := s.GetUserInfo()
+	if err != nil {
+		return core.Status{Phase: core.PhaseDisconnected, Online: false, Message: err.Error()}, err
+	}
+	if ok, err := info.IsOK(); !ok {
+		if err == nil {
+			err = errors.New("portal status unavailable")
+		}
+		return core.Status{Phase: core.PhaseDisconnected, Online: false, Message: err.Error()}, err
+	}
+	return core.Status{Phase: core.PhaseConnected, Online: true}, nil
+}
+
+func (s *PortalServer) InternetReachable(ctx context.Context) bool {
+	_ = ctx
+	return s.Internet()
+}
+
 func (s PortalServer) callback() string {
 	return s.jsonpCallback
 }
@@ -92,4 +162,15 @@ func (e ResponseError) IsOK() (bool, error) {
 		return false, errors.New(e.ErrorMsg)
 	}
 	return true, nil
+}
+
+func mapLoginError(err error) error {
+	if err == nil {
+		return nil
+	}
+	message := strings.ToLower(err.Error())
+	if strings.Contains(message, "password") || strings.Contains(message, "auth") {
+		return core.ErrAuthenticationFailed
+	}
+	return err
 }
