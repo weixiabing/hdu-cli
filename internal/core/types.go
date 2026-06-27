@@ -1,9 +1,6 @@
 package core
 
-import (
-	"context"
-	"errors"
-)
+import "errors"
 
 type Phase string
 
@@ -16,6 +13,7 @@ const (
 )
 
 var ErrAuthenticationFailed = errors.New("authentication failed")
+var ErrReconnectCanceled = errors.New("reconnect canceled")
 
 type Credentials struct {
 	Username string
@@ -26,11 +24,4 @@ type Status struct {
 	Phase   Phase
 	Online  bool
 	Message string
-}
-
-type PortalClient interface {
-	Login(ctx context.Context, username, password string) (Status, error)
-	Logout(ctx context.Context, username string) error
-	CurrentStatus(ctx context.Context) (Status, error)
-	InternetReachable(ctx context.Context) bool
 }
