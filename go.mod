@@ -1,6 +1,8 @@
 module github.com/hduhelp/hdu-cli
 
-go 1.18
+go 1.26.0
+
+toolchain go1.26.4
 
 require (
 	github.com/hduhelp/api_open_sdk v0.0.0-20220427110722-33d902848349

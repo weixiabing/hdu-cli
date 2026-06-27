@@ -7,6 +7,7 @@ import (
 	"github.com/hduhelp/hdu-cli/cmd/auth"
 	"github.com/hduhelp/hdu-cli/cmd/net"
 	"github.com/hduhelp/hdu-cli/cmd/rpc"
+	appconfig "github.com/hduhelp/hdu-cli/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -49,6 +50,15 @@ var cfgFile string
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	defaults := appconfig.Default()
+	viper.SetDefault("endpoint", defaults.Endpoint)
+	viper.SetDefault("acid", defaults.ACID)
+	viper.SetDefault("username", defaults.Username)
+	viper.SetDefault("checkIntervalSeconds", defaults.CheckIntervalSeconds)
+	viper.SetDefault("autoConnect", defaults.AutoConnect)
+	viper.SetDefault("autoReconnect", defaults.AutoReconnect)
+	viper.SetDefault("logLevel", defaults.LogLevel)
+
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
