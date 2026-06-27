@@ -14,7 +14,7 @@
 ## 平台说明
 
 - macOS：提供 Wails 桌面端，发布 `.dmg`
-- Windows：提供 Wails 桌面端，发布 `.msi`
+- Windows：提供 Wails 桌面端，发布 `.exe`
 - Linux：只提供 CLI 二进制和一键安装脚本
 
 ## Linux 一键安装
@@ -119,7 +119,7 @@ GitHub Actions 会自动完成以下工作：
 - 运行 Go 测试
 - 打包 Linux CLI
 - 构建 macOS `.dmg`
-- 构建 Windows `.msi`
+- 构建 Windows `.exe`
 - 上传 GitHub Release 附件
 
 

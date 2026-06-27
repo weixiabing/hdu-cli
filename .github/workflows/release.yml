@@ -33,7 +33,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-cli
-          path: dist/*
+          path: |
+            dist/*.tar.gz
+            dist/checksums.txt
 
   build-desktop-macos:
     runs-on: macos-latest
@@ -126,39 +128,11 @@ jobs:
           wails3 version
           wails3 task windows:build:native
 
-      - name: Build MSI
-        shell: pwsh
-        run: |
-          $env:PATH="$env:USERPROFILE\.dotnet\tools;$env:PATH"
-          New-Item -ItemType Directory -Force -Path dist | Out-Null
-          @'
-          <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-            <Package Name="HDU Network" Manufacturer="HDUHELP" Version="0.1.0" UpgradeCode="6F69D7D7-78C3-4A82-9A0E-3B856F7F2A3F">
-              <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
-              <MediaTemplate />
-              <StandardDirectory Id="ProgramFiles64Folder">
-                <Directory Id="INSTALLFOLDER" Name="HDU Network" />
-              </StandardDirectory>
-              <Feature Id="MainFeature" Title="HDU Network" Level="1">
-                <ComponentGroupRef Id="ProductComponents" />
-              </Feature>
-            </Package>
-            <Fragment>
-              <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-                <Component Guid="9E443B84-1B71-4C0D-A2D9-8B30A6D7A1F1">
-                  <File Source="bin\hdu-network.exe" KeyPath="yes" />
-                </Component>
-              </ComponentGroup>
-            </Fragment>
-          </Wix>
-          '@ | Set-Content -Path dist\hdu-network.wxs
-          wix build dist\hdu-network.wxs -o dist\hdu-network.msi
-
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-msi
-          path: desktop/wails/dist/hdu-network.msi
+          name: windows-exe
+          path: desktop/wails/bin/hdu-network.exe
 
   publish:
     runs-on: ubuntu-latest
@@ -182,13 +156,13 @@ jobs:
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
-          name: windows-msi
+          name: windows-exe
           path: release/windows
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/linux/**
+            release/linux/*.tar.gz
             release/macos/**
-            release/windows/**
+            release/windows/*.exe
