@@ -80,10 +80,18 @@ hdu-cli config init --username 20230001 --password 你的密码
 
 桌面端代码位于 `desktop/wails`，基于 Wails v3 构建。
 
-- macOS：托盘常驻、设置窗口、开机自启
-- Windows：托盘常驻、设置窗口、开机自启
+- 左侧导航：`主页 / 连接 / 日志 / 我的`
+- 主页：状态总览 + 一键连接 / 断开
+- 连接：账号、认证地址、AC ID、自动重连
+- 日志：最近连接、掉线重连、错误提示
+- 我的：开机自启、托盘常驻、关于信息
 
 关闭窗口不会退出程序，而是自动隐藏到托盘。
+
+客户端截图：
+
+![客户端截图](docs/images/client-ui.png)
+
 
 ## 开发说明
 
@@ -121,5 +129,3 @@ GitHub Actions 会自动完成以下工作：
 - 构建 macOS `.dmg`
 - 构建 Windows `.exe`
 - 上传 GitHub Release 附件
-
-
