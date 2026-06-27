@@ -5,8 +5,10 @@ import (
 	"os"
 
 	"github.com/hduhelp/hdu-cli/cmd/auth"
+	configcmd "github.com/hduhelp/hdu-cli/cmd/config"
 	"github.com/hduhelp/hdu-cli/cmd/net"
 	"github.com/hduhelp/hdu-cli/cmd/rpc"
+	servicecmd "github.com/hduhelp/hdu-cli/cmd/service"
 	appconfig "github.com/hduhelp/hdu-cli/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -43,7 +45,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("verbose", "V", false, "show more info")
 	cobra.CheckErr(viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose")))
 
-	rootCmd.AddCommand(net.Cmd, auth.Cmd, rpc.Cmd)
+	rootCmd.AddCommand(net.Cmd, auth.Cmd, rpc.Cmd, configcmd.Cmd, servicecmd.Cmd)
 }
 
 var cfgFile string

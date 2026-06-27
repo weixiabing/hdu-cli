@@ -1,0 +1,13 @@
+[Unit]
+Description=HDU campus network client
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart={{BINARY_PATH}} net daemon --config {{CONFIG_PATH}}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

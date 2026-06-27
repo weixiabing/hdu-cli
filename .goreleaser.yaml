@@ -1,86 +1,39 @@
+project_name: hdu-cli
+
 builds:
-  - env:
-      - CGO_ENABLED=0
+  - id: linux-cli
+    main: ./main.go
+    binary: hdu-cli
     goos:
       - linux
-      - windows
-      - darwin
     goarch:
       - amd64
-      - "386"
-      - arm
+      - arm64
+    env:
+      - CGO_ENABLED=0
+
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
+  - id: linux-cli-archive
+    ids:
+      - linux-cli
+    formats:
+      - tar.gz
+    name_template: "{{ .Binary }}_{{ .Os | title }}_{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE
+      - scripts/install-linux.sh
+      - scripts/uninstall-linux.sh
+
 checksum:
-  name_template: 'checksums.txt'
+  name_template: checksums.txt
+
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
+
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
-
-release:
-  header: |
-    ## Hi! 欢迎使用HDU-CLI ({{ .Date }})
-
-    此处是版本介绍
-
-  footer: |
-    ## 感谢您的支持!
-
-    以上就是在 {{ .Tag }} 上的改动!
-  name_template: "{{.ProjectName}}-v{{.Version}} {{.Env.USER}}"
-
-
-nfpms:
-  -
-    # ID of the nfpm config, must be unique.
-    # Defaults to "default".
-    id: packages
-
-    # Replacements for GOOS and GOARCH in the package name.
-    # Keys should be valid GOOSs or GOARCHs.
-    # Values are the respective replacements.
-    # Default is empty.
-    replacements:
-      amd64: 64-bit
-      386: 32-bit
-      darwin: macOS
-      linux: Tux
-
-    # Your app's vendor.
-    # Default is empty.
-    vendor: HDUHELP
-
-    # Template to your app's homepage.
-    # Default is empty.
-    homepage: https://github.com/hduhelp/hdu-cli
-
-    # Your app's maintainer (probably you).
-    # Default is empty.
-    maintainer: HDUHELP
-    # Your app's license.
-    # Default is empty.
-    license: Apache 2.0
-
-    # Formats to be generated.
-    formats:
-      - deb
-      - rpm
-
-publishers:
-  - name: fury.io
-    # by specifying `packages` id here goreleaser will only use this publisher
-    # with artifacts identified by this id{{ .Env.FURY_TOKEN }}
-    ids:
-      - packages
-    dir: "{{ dir .ArtifactPath }}"
-    cmd: curl -F package=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/{{ .Env.FURY_USER_NAME }}/
+      - "^docs:"
+      - "^test:"

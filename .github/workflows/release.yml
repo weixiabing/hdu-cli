@@ -1,0 +1,174 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.4"
+
+      - name: Setup GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: latest
+          install-only: true
+
+      - name: Build Linux CLI snapshot
+        run: goreleaser build --snapshot --clean
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-cli
+          path: dist/*
+
+  build-desktop-macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: desktop/wails
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.4"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/wails/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: desktop/wails/frontend
+
+      - name: Build Wails app bundle
+        run: go run github.com/wailsapp/wails/v3/cmd/wails3@latest task darwin:package
+
+      - name: Create DMG
+        run: |
+          mkdir -p dist
+          hdiutil create -volname "HDU Network" -srcfolder "bin/hdu-network.app" -ov -format UDZO "dist/hdu-network.dmg"
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
+          path: desktop/wails/dist/hdu-network.dmg
+
+  build-desktop-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop/wails
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.4"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/wails/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: desktop/wails/frontend
+
+      - name: Install WiX
+        run: dotnet tool install --global wix --version 5.*
+
+      - name: Build Wails executable
+        shell: pwsh
+        run: go run github.com/wailsapp/wails/v3/cmd/wails3@latest task windows:build:native
+
+      - name: Build MSI
+        shell: pwsh
+        run: |
+          $env:PATH="$env:USERPROFILE\.dotnet\tools;$env:PATH"
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          @'
+          <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+            <Package Name="HDU Network" Manufacturer="HDUHELP" Version="0.1.0" UpgradeCode="6F69D7D7-78C3-4A82-9A0E-3B856F7F2A3F">
+              <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+              <MediaTemplate />
+              <StandardDirectory Id="ProgramFiles64Folder">
+                <Directory Id="INSTALLFOLDER" Name="HDU Network" />
+              </StandardDirectory>
+              <Feature Id="MainFeature" Title="HDU Network" Level="1">
+                <ComponentGroupRef Id="ProductComponents" />
+              </Feature>
+            </Package>
+            <Fragment>
+              <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+                <Component Guid="9E443B84-1B71-4C0D-A2D9-8B30A6D7A1F1">
+                  <File Source="bin\hdu-network.exe" KeyPath="yes" />
+                </Component>
+              </ComponentGroup>
+            </Fragment>
+          </Wix>
+          '@ | Set-Content -Path dist\hdu-network.wxs
+          wix build dist\hdu-network.wxs -o dist\hdu-network.msi
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msi
+          path: desktop/wails/dist/hdu-network.msi
+
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+      - build-linux
+      - build-desktop-macos
+      - build-desktop-windows
+    steps:
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-cli
+          path: release/linux
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-dmg
+          path: release/macos
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-msi
+          path: release/windows
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/linux/**
+            release/macos/**
+            release/windows/**
