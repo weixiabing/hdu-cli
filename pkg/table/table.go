@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/tw"
 )
 
 // PrintStruct prints a table of the given struct
@@ -16,6 +17,10 @@ func PrintStruct(in interface{}, tags ...string) {
 
 	rows := rows(in, tags...)
 	table := tablewriter.NewWriter(os.Stdout)
+	table.Options(
+		tablewriter.WithHeaderAlignment(tw.AlignLeft),
+		tablewriter.WithRowAlignment(tw.AlignLeft),
+	)
 	headers := append([]string{"Name", "Value"}, tags...)
 	headerRow := make([]any, 0, len(headers))
 	for _, header := range headers {
